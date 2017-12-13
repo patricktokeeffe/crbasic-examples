@@ -1,0 +1,145 @@
+' TSI 4043 flowmeter example code
+'
+' Adapted from excerpted 2014 PROPHET FIS logger code
+'
+' Patrick O'Keeffe (c) 2017
+' Laboratory for Atmospheric Research at Washington State University
+
+ConstTable
+  Const FLUSH_TUBE_ID = 0.251 'inches, I.D. of sampling line
+EndConstTable
+
+Const CR = CHR(13) 'carriage return
+
+Const TSI_COM = ComC3
+Const TSI_BAUD = 38400
+Const TSI_FORMAT = 3  '8/none/1 in "binary mode"
+Const TSI_BUFF = 19  '2*(9 char/rec) + 1
+Const TSI_QUERY = "DBFTP0001"+CR 'request 1 binary record
+Const TSI_BEGINWORD = &h80000000 'special null byte representation
+Const TSI_ENDWORD = &hFFFF
+Const TSI_STP_T = 21.1 'degC
+Const TSI_STP_P = 101.3 'kPa
+Const PI = 3.14159
+Const L_PER_FT3 = 28.316847 'vol. conversion
+Const R_AIR = 287.058   'specific gas constant for dry air, J/(kg K)
+Const R_ = 8.3144621e-6 'universal gas constant, (kPa m^3)/(K mmol)
+'part of Sutherland's fomula for deriving dynamic viscosity of air
+Const SU_CONST = 120 'K
+Const LAMBDA_AIR = 1.512041288 'uPa s K^-1/2
+Const TUBE_AREA = PI*FLUSH_TUBE_ID*FLUSH_TUBE_ID/4 'in^2
+
+
+'============================ VARIABLES =================================
+Dim i
+Public tsi_bytes
+Public tsi_record As String * 6
+Public tsi_words(3) As Long
+Public tmpr_msb As Long
+Public tsi(3)
+Alias tsi(1) = flush_massFlow
+Alias tsi(2) = flush_tmpr
+Alias tsi(3) = flush_press
+Units flush_massFlow = sLpm
+Units flush_tmpr = degC
+Units flush_press = kPa
+
+Public tube_volume
+Public tsi_etc(3)
+Alias tsi_etc(1) = flush_volFlow
+Alias tsi_etc(2) = flush_delay
+Alias tsi_etc(3) = flush_Re
+Units flush_volFlow = L/min
+Units flush_delay = sec
+Units flush_Re = dimless
+
+
+'================================= FUNCTIONS =================================
+'TSI Models 4040/4043/4045 General Purpose Thermal Mass Flowmeter Operation
+'    and Service Manual. Appendix B. August 2001. Revision D
+'[StdFlow] = std L/min @ TSI specs, [Tmpr] = C, [Press] = kPa
+Function volumetric_flow(StdFlow, Tmpr, Press) As Float 'Lpm
+  Return (StdFlow * ((273.15+Tmpr)/(273.15+TSI_STP_T)) * (TSI_STP_P/Press))
+EndFunction
+
+'[VolFlow] = L/min
+Function estimate_lag(VolFlow) As Float 'sec
+  Return (60 * tube_volume / VolFlow))  '(60sec/min)(L)(min/L)
+EndFunction
+
+'https://en.wikipedia.org/wiki/Viscosity
+'[Tmpr] = C
+Function dynamic_viscosity(Tmpr) As Float 'kg/(m*s) = Pa*s
+  '(uPa*s/K^1/2)(K^3/2)(1/K) * (Pa/10^6 uPa)
+  Return (LAMBDA_AIR * (Tmpr+273.15)^1.5 / ((Tmpr+273.15+SU_CONST)*10^6))
+EndFunction
+
+'[Tmpr] = C, [Press] = kPa (abs.)
+Function density_of_air(Tmpr, Press) As Float 'kg/m^3
+  '(Pa/kPa)(kPa)(kg*K / J)(1/K)(J / Pa*m^3)
+  Return (1000*Press / (R_AIR*(Tmpr+273.15)))
+EndFunction
+
+'https://en.wikipedia.org/wiki/Reynolds_number
+'[VolFlow] = L/min, [Tmpr] = C, [Press] = kPa (abs.)
+'HINT return as a Float but use FIX() to drop fractional portion
+Function reynolds_num(VolFlow, Tmpr, Press) As Float 'dimless
+  Dim mu, rho
+  mu = dynamic_viscosity(Tmpr)
+  rho = density_of_air(Tmpr, Press)
+  '(kg/m^3)(L/min)(in)(m*s/kg)(1/in^2) * (min/60 sec)(39.37in/m)(m^3/1000L)
+  Return Round((rho*VolFlow*FLUSH_TUBE_ID*39.37)/(mu*TUBE_AREA*60*1000), -1)
+EndFunction
+
+
+'============================== SUBROUTINES =================================
+Sub setup_tsi4043()
+  SerialOpen(TSI_COM,TSI_BAUD,TSI_FORMAT,0,TSI_BUFF)
+  Move(tsi(1),3,NAN,1)
+EndSub
+
+
+'========================= MAIN PROGRAM =====================================
+BeginProg
+  setup_tsi4043()
+
+	Scan (1000,mSec,0,0)
+    SerialInRecord(TSI_COM,tsi_record,TSI_BEGINWORD,0,TSI_ENDWORD,tsi_bytes,11)
+    SerialOut(TSI_COM,TSI_QUERY,"",0,0) 'ask for measurement
+    MoveBytes(tsi_words(1),2,tsi_record,0,2) 'flow
+    MoveBytes(tsi_words(3),2,tsi_record,4,2) 'press
+    'HINT string-indexing is 1-based but MoveBytes indexing is 0-based
+    tmpr_msb = ASCII(tsi_record(1,1,3)) 'grab sign & MSB as # (0-255)
+    tsi_words(2) = (tmpr_msb AND &h7F) << 8 'drop sign, push into 2nd byte pos
+    MoveBytes(tsi_words(2),3,tsi_record,3,1) 'move LSB into 1st byte pos
+    If (tmpr_msb AND &h80) Then tsi_words(2) -= 32768 'apply sign
+    For i = 1 To 3 'now scale to decimal
+      tsi(i) = tsi_words(i)/100.0
+    Next
+    'HACK datalogger reads consecutive leading null bytes (e.g. flow = 0.00)
+    'incorrectly; if abs. press is 0, then move values into correct vars
+    If (flush_press <= 0) Then
+      flush_press = flush_tmpr
+      flush_tmpr = flush_massFlow
+      flush_massFlow = 0
+    EndIf
+    'HACK still possible for datalogger to hiccup if MSB of flow is 0x00 so 
+    'we also conduct naive sanity check on temperature value and throw out
+    'data if suspect
+    If (flush_tmpr > 50) Then '>122*F ?
+      flush_massFlow = NAN
+      flush_press = NAN
+      flush_tmpr = NAN
+      flush_volFlow = NAN
+      flush_delay = NAN
+      flush_Re = NAN
+    Else
+      flush_volFlow = volumetric_flow(flush_massFlow, flush_tmpr, flush_press)
+      flush_delay = IIF(tube_volume > 0, estimate_lag(flush_volFlow), NAN)
+      flush_Re = IIF(flush_volFlow > 0, _
+                      reynolds_num(flush_volFlow, flush_tmpr, flush_press), 0)
+    EndIf
+
+	NextScan
+EndProg
+
