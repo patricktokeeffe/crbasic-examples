@@ -103,41 +103,41 @@ EndSub
 BeginProg
   setup_tsi4043()
 
-	Scan (1000,mSec,0,0)
+	Scan (100,mSec,0,0)
     SerialInRecord(TSI_COM,tsi_record,TSI_BEGINWORD,0,TSI_ENDWORD,tsi_bytes,11)
     SerialOut(TSI_COM,TSI_QUERY,"",0,0) 'ask for measurement
-    MoveBytes(tsi_words(1),2,tsi_record,0,2) 'flow
-    MoveBytes(tsi_words(3),2,tsi_record,4,2) 'press
-    'HINT string-indexing is 1-based but MoveBytes indexing is 0-based
-    tmpr_msb = ASCII(tsi_record(1,1,3)) 'grab sign & MSB as # (0-255)
-    tsi_words(2) = (tmpr_msb AND &h7F) << 8 'drop sign, push into 2nd byte pos
-    MoveBytes(tsi_words(2),3,tsi_record,3,1) 'move LSB into 1st byte pos
-    If (tmpr_msb AND &h80) Then tsi_words(2) -= 32768 'apply sign
-    For i = 1 To 3 'now scale to decimal
-      tsi(i) = tsi_words(i)/100.0
-    Next
-    'HACK datalogger reads consecutive leading null bytes (e.g. flow = 0.00)
-    'incorrectly; if abs. press is 0, then move values into correct vars
-    If (flush_press <= 0) Then
-      flush_press = flush_tmpr
-      flush_tmpr = flush_massFlow
-      flush_massFlow = 0
-    EndIf
-    'HACK still possible for datalogger to hiccup if MSB of flow is 0x00 so 
-    'we also conduct naive sanity check on temperature value and throw out
-    'data if suspect
-    If (flush_tmpr > 50) Then '>122*F ?
-      flush_massFlow = NAN
-      flush_press = NAN
-      flush_tmpr = NAN
-      flush_volFlow = NAN
-      flush_delay = NAN
-      flush_Re = NAN
-    Else
+    If ((tsi_bytes = 6) OR (tsi_bytes = 4)) Then 'caught complete record
+      MoveBytes(tsi_words(1),2,tsi_record,0,2) 'flow
+      MoveBytes(tsi_words(3),2,tsi_record,4,2) 'press
+      'HINT string-indexing is 1-based but MoveBytes indexing is 0-based
+      tmpr_msb = ASCII(tsi_record(1,1,3)) 'grab sign & MSB as # (0-255)
+      tsi_words(2) = (tmpr_msb AND &h7F) << 8 'drop sign, push into 2nd byte pos
+      MoveBytes(tsi_words(2),3,tsi_record,3,1) 'move LSB into 1st byte pos
+      If (tmpr_msb AND &h80) Then tsi_words(2) -= 32768 'apply sign
+      For i = 1 To 3 'now scale to decimal
+        tsi(i) = tsi_words(i)/100.0
+      Next
+      
+      If (tsi_bytes = 4) Then
+        'HACK datalogger reads consecutive leading null bytes (e.g. flow = 0.00)
+        'incorrectly; if abs. press is 0, then move values into correct vars
+      'If (flush_press <= 0) Then
+        flush_press = -99
+        flush_tmpr = -99
+        flush_massFlow = -99
+      EndIf
+
       flush_volFlow = volumetric_flow(flush_massFlow, flush_tmpr, flush_press)
       flush_delay = IIF(tube_volume > 0, estimate_lag(flush_volFlow), NAN)
       flush_Re = IIF(flush_volFlow > 0, _
                       reynolds_num(flush_volFlow, flush_tmpr, flush_press), 0)
+    Else
+      flush_massFlow = 99
+      flush_press = 99
+      flush_tmpr = 99
+      flush_volFlow = NAN
+      flush_delay = NAN
+      flush_Re = NAN
     EndIf
 
 	NextScan
