@@ -118,13 +118,13 @@ BeginProg
         tsi(i) = tsi_words(i)/100.0
       Next
       
-      If (tsi_bytes = 4) Then
-        'HACK datalogger reads consecutive leading null bytes (e.g. flow = 0.00)
-        'incorrectly; if abs. press is 0, then move values into correct vars
-      'If (flush_press <= 0) Then
-        flush_press = -99
-        flush_tmpr = -99
-        flush_massFlow = -99
+      'HACK serialinrecord catches on most recent null byte so if consecutive
+      'leading null bytes are encountered (e.g. flow = 0.00), parsed record
+      'values will be off-by-one... shift each forward
+      If (flush_press <= 0) Then
+        flush_press = flush_tmpr
+        flush_tmpr = flush_massFlow
+        flush_massFlow = 0
       EndIf
 
       flush_volFlow = volumetric_flow(flush_massFlow, flush_tmpr, flush_press)
@@ -132,9 +132,9 @@ BeginProg
       flush_Re = IIF(flush_volFlow > 0, _
                       reynolds_num(flush_volFlow, flush_tmpr, flush_press), 0)
     Else
-      flush_massFlow = 99
-      flush_press = 99
-      flush_tmpr = 99
+      flush_massFlow = NAN
+      flush_press = NAN
+      flush_tmpr = NAN
       flush_volFlow = NAN
       flush_delay = NAN
       flush_Re = NAN
