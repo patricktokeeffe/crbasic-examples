@@ -9,14 +9,55 @@
 Const GMX600_PORT = U1
 Const GMX600_ADDR = 0
 
-Public datah(5)
+Public gmx600(19)
+Alias gmx600(1)  = rel_WD    'aM!
+Alias gmx600(2)  = rel_WS
+Alias gmx600(3)  = corr_WD
+Alias gmx600(4)  = corr_WS
+Alias gmx600(5)  = status1
+Alias gmx600(6)  = amb_tmpr  'aM1!
+Alias gmx600(7)  = amb_RH
+Alias gmx600(8)  = amb_dewpoint
+Alias gmx600(9)  = amb_press
+Alias gmx600(10) = status2
+Alias gmx600(11) = precip_int 'aM3!
+Alias gmx600(12) = precip_tot
+Alias gmx600(13) = status3
+Alias gmx600(14) = latitude_a 'aM5!
+Alias gmx600(15) = latitude_b
+Alias gmx600(16) = longitude_a
+Alias gmx600(17) = longitude_b
+Alias gmx600(18) = altitude
+Alias gmx600(19) = status4
+Units rel_WD = degrees
+Units rel_WS = m/s
+Units corr_WD = degreesTN
+Units corr_WS = m/s
+Units status1 = bitmap
+Units amb_tmpr = degC
+Units amb_RH = pct
+Units amb_dewpoint = degC
+Units amb_press = hPa
+Units status2 = bitmap
+Units precip_int = mm/hr
+Units precip_tot = mm
+Units status3 = bitmap
+Units latitude_a = degreesN
+Units latitude_b = degreesN
+Units longitude_a = degreesE
+Units longitude_b = degreesE
+Units altitude = m
+Units status4 = bitmap
 
 
 '========================= PROGRAM =====================================
 BeginProg
 	Scan (1,Sec,0,0)
 
-    SDI12Recorder(datah,GMX600_PORT,GMX600_ADDR,"M!",1,0)
+    SDI12Recorder(gmx600(1),GMX600_PORT,GMX600_ADDR,"M!",1,0)
+    SDI12Recorder(gmx600(6),GMX600_PORT,GMX600_ADDR,"M1!",1,0)
+    SDI12Recorder(gmx600(11),GMX600_PORT,GMX600_ADDR,"M3!",1,0)
+    SDI12Recorder(gmx600(14),GMX600_PORT,GMX600_ADDR,"M5!",1,0)
 
 
 	NextScan
