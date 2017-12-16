@@ -15,40 +15,37 @@ Alias gmx600(1)  = rel_WD    'aM!
 Alias gmx600(2)  = rel_WS
 Alias gmx600(3)  = corr_WD
 Alias gmx600(4)  = corr_WS
-Alias gmx600(5)  = status1
+Alias gmx600(5)  = status
 Alias gmx600(6)  = amb_tmpr  'aM1!
 Alias gmx600(7)  = amb_RH
 Alias gmx600(8)  = amb_dewpoint
 Alias gmx600(9)  = amb_press
-Alias gmx600(10) = status2
+'Alias gmx600(10) is dup of (5)
 Alias gmx600(11) = precip_int 'aM3!
 Alias gmx600(12) = precip_tot
-Alias gmx600(13) = status3
+'Alias gmx600(13) is dup of (5)
 Alias gmx600(14) = latitude_deg 'aM5!
 Alias gmx600(15) = latitude_min
 Alias gmx600(16) = longitude_deg
 Alias gmx600(17) = longitude_min
 Alias gmx600(18) = altitude
-Alias gmx600(19) = status4
+'Alias gmx600(19) is dup of (5)
 Units rel_WD = degrees
 Units rel_WS = m/s
 Units corr_WD = degreesTN
 Units corr_WS = m/s
-Units status1 = bitmap
+Units status = bitmap
 Units amb_tmpr = degC
 Units amb_RH = pct
 Units amb_dewpoint = degC
 Units amb_press = hPa
-Units status2 = bitmap
 Units precip_int = mm/hr
 Units precip_tot = mm
-Units status3 = bitmap
 Units latitude_deg = degreesN
 Units latitude_min = minutesN
 Units longitude_deg = degreesE
 Units longitude_min = minutesE
 Units altitude = m
-Units status4 = bitmap
 
 
 '========================= PROGRAM =====================================
