@@ -6,10 +6,14 @@
 ' Washington State University
 '
 
+Const SCAN_INT  = 5  'seconds
+Const STATS_INT = 15 'minutes
+
 Const GMX600_PORT = U1
 Const GMX600_ADDR = 0
 Const MIN_PER_FDEG = 60/1e6
 
+'========================== VARIABLES ==================================
 Public gmx600(19)
 Alias gmx600(1)  = rel_WD    'aM!
 Alias gmx600(2)  = rel_WS
@@ -47,6 +51,64 @@ Units longitude_deg = degreesE
 Units longitude_min = minutesE
 Units altitude = m
 
+Public work_out(6)
+Alias work_out(1) = rel_WS_Avg      'mean horizontal wind speed
+Alias work_out(2) = rel_WD_unit_Avg 'unit vector mean wind direction
+Alias work_out(3) = rel_WD_epa_Std  'Yamartino-algorithm WD std. dev.
+Alias work_out(4) = corr_WS_Avg
+Alias work_out(5) = corr_WD_unit_Avg
+Alias work_out(6) = corr_WD_epa_Std
+
+
+'========================= DATA TABLES ==================================
+DataTable(work,True,1)
+  DataInterval(0,STATS_INT,Min,1)
+  WindVector(1,rel_WS,rel_WD,IEEE4,(rel_WS=NAN OR rel_WD=NAN),0,0,0)
+  WindVector(1,corr_WS,corr_WD,IEEE4,(rel_WS=NAN OR rel_WD=NAN),0,0,0)
+EndTable
+
+DataTable(minutely,True,-1) 
+  DataInterval(0,1,Min,10) 'XXXX: hard-coded 1-min interval
+  'HINT: Median() avoids pitfalls of Average() w/o overhead of WindVector()
+  'but usage is limited to short output intervals
+  Median (1,rel_WD,(60/SCAN_INT),FP2,rel_WD=NAN) 'XXXX: hard-coded 60sec
+  Average(1,rel_WS,FP2,rel_WD=NAN)
+  Median (1,corr_WD,(60/SCAN_INT),FP2,corr_WD=NAN) 'XXXX: hard-coded 60sec
+  Average(1,corr_WS,FP2,corr_WS=NAN)
+  Average(1,amb_tmpr,FP2,amb_tmpr=NAN)
+  Average(1,amb_RH,FP2,amb_RH=NAN)
+  Average(1,amb_dewpoint,FP2,amb_dewpoint=NAN)
+  Average(1,amb_press,IEEE4,amb_press=NAN) 'HINT: FP2 lacks resolution
+  Average(1,precip_int,FP2,precip_int=NAN)
+  'HINT: by default `precip_tot` is cumulative value since midnight
+  Sample (1,precip_tot,FP2)
+    FieldNames("precip_daily_Tot")
+  'HINT: neither avg/sample captures enough info
+  Median (1,status,(60*STATS_INT/SCAN_INT),FP2,status=NAN)
+EndTable
+
+DataTable(stats,True,-1)
+  DataInterval(0,STATS_INT,Min,10)
+  Sample (6,work_out(1),FP2) 'HINT: see data table `work`
+  Average(1,amb_tmpr,FP2,amb_tmpr=NAN)
+  Average(1,amb_RH,FP2,amb_RH=NAN)
+  Average(1,amb_dewpoint,FP2,amb_dewpoint=NAN)
+  Average(1,amb_press,IEEE4,amb_press=NAN) 'HINT: FP2 lacks resolution
+  Average(1,precip_int,FP2,precip_int=NAN)
+  'HINT: by default `precip_tot` is cumulative value since midnight
+  Sample (1,precip_tot,FP2)
+    FieldNames("precip_daily_Tot")
+  'TODO: the GPS data could be more efficiently retained
+  Average(1,latitude_deg,FP2,latitude_deg=NAN)
+  Average(1,latitude_min,IEEE4,latitude_min=NAN)
+  Average(1,longitude_deg,FP2,longitude_deg=NAN)
+  Average(1,longitude_min,IEEE4,longitude_min=NAN)
+  Average(1,altitude,IEEE4,altitude=NAN)
+  'HINT: neither avg/sample captures enough info
+  Median (1,status,(60*STATS_INT/SCAN_INT),FP2,status=NAN)
+EndTable
+
+
 
 '========================= PROGRAM =====================================
 BeginProg
@@ -63,6 +125,11 @@ BeginProg
       Move(latitude_min,5,NAN,1) 'replace 999.99 with nulls
     EndIf
 
+    CallTable(work)
+    If (work.Output(1,1)) Then GetRecord(work_out(1),work,1)
+    
+    CallTable(minutely)
+    CallTable(stats)
 	NextScan
 EndProg
 
