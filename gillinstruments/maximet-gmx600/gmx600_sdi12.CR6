@@ -50,7 +50,7 @@ Units altitude = m
 
 '========================= PROGRAM =====================================
 BeginProg
-	Scan (1,Sec,0,0)
+	Scan (5,Sec,0,0)
 
     SDI12Recorder(gmx600(1),GMX600_PORT,GMX600_ADDR,"M!",1,0)
     SDI12Recorder(gmx600(6),GMX600_PORT,GMX600_ADDR,"M1!",1,0)
