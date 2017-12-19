@@ -64,7 +64,7 @@ Alias work_out(6) = corr_WD_epa_Std
 DataTable(work,True,1)
   DataInterval(0,STATS_INT,Min,1)
   WindVector(1,rel_WS,rel_WD,IEEE4,(rel_WS=NAN OR rel_WD=NAN),0,0,0)
-  WindVector(1,corr_WS,corr_WD,IEEE4,(rel_WS=NAN OR rel_WD=NAN),0,0,0)
+  WindVector(1,corr_WS,corr_WD,IEEE4,(corr_WS=NAN OR corr_WD=NAN),0,0,0)
 EndTable
 
 DataTable(minutely,True,-1) 
