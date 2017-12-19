@@ -1,8 +1,9 @@
 ## MaxiMet GMX600 Total Weather Station
 
-The GMX600 is one of the [Gill Instruments](gillinstruments.com) line of total
-weather stations. The entire GMX-series has similar functionality and these
-examples should be straightforward to adapt to sibling models. 
+The GMX600 is one of the Gill Instruments line of 
+[compact weather stations](gillinstruments.com/products/anemometer/maximet-compact-weather-stations.html).
+The entire GMX-series has similar functionality and these examples should be
+straightforward to adapt to sibling models. 
 
 
 ### SDI-12
@@ -12,7 +13,7 @@ examples should be straightforward to adapt to sibling models.
 * Rapid integration (simple, standardized data protocol)
 * Long cable lengths (up to 90m, only 3 wires total)
 
-** Disadvantages:**
+**Disadvantages:**
 
 * Slow (too slow to query all parameters at 1Hz)
 * Limited data set (Wind Sensor Status code not available, only GPS position/altitude
