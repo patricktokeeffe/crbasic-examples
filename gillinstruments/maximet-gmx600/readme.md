@@ -1,7 +1,7 @@
 ## MaxiMet GMX600 Total Weather Station
 
 The GMX600 is one of the Gill Instruments line of 
-[compact weather stations](gillinstruments.com/products/anemometer/maximet-compact-weather-stations.html).
+[compact weather stations](http://gillinstruments.com/products/anemometer/maximet-compact-weather-stations.html).
 The entire GMX-series has similar functionality and these examples should be
 straightforward to adapt to sibling models. 
 
