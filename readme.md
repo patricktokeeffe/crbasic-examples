@@ -7,7 +7,9 @@ dataloggers.
 
 ### Examples
 
-* *stay tuned*
+* [Gill Instruments](gillinstruments/)
+    * [MaxiMet GMX600 compact weather station](gillinstruments/maximet-gmx600/)
+
 
 ### Other Repositories
 
