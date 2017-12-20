@@ -1,0 +1,59 @@
+' Example 2B Tech model 205 integration, excerpted from Indoor AQ DAQ
+'
+' Patrick O'Keeffe (c) 2017
+' Laboratory for Atmospheric Research
+' Washington State University
+
+
+Const O3_COM = ComU5 '& U6
+Const O3_BAUD = 19200
+Const O3_FMT = 3 '8/n/1
+Const O3_REC = 80
+Const O3_BUFF = 1+2*O3_REC
+
+'========================== VARIABLES ========================
+Dim o3_record As String * O3_REC
+Dim o3(9)
+Alias o3(1) = m205_O3
+Alias o3(2) = m205_cell_T
+Alias o3(3) = m205_cell_P
+'4: date, day of month    '7: time, hour
+'5: date, month           '8: time, minute
+'6: date, short year      '9: time, second
+Units m205_O3 = ppbv
+Units m205_cell_T = degC
+Units m205_cell_P = mbar
+
+'=========================== DATA TABLES ====================
+DataTable(tsdata,True,-1)
+  Sample(2,o3(1),FP2)
+  Sample(1,o3(3),IEEE4)
+EndTable
+
+DataTable(stats,True,-1)
+  DataInterval(0,30,min,1)
+  Average(1,m205_O3,FP2,m205_O3=NAN)
+  Average(1,m205_cell_T,FP2,m205_cell_T=NAN)
+  Average(1,m205_cell_P,IEEE4,m205_cell_P=NAN)
+EndTable
+
+'============================ PROGRAM =======================
+BeginProg
+  SerialOpen(O3_COM,O3_BAUD,O3_FMT,0,O3_BUFF)
+
+	Scan (10,sec,0,0) 'same rate as analyzer data output
+    SerialIn(o3_record,O3_COM,100,&h0D,O3_REC)
+    If (Len(o3_record)) Then
+      SplitStr(o3(1),o3_record,"",9,0)
+      'HACK: naive sanity check on data parsing
+      If (o3(9)=NAN OR m205_cell_P < 700 OR m205_cell_P > 1300) Then
+        Move(o3(1),9,NAN,1)
+      EndIf
+      SerialFlush(O3_COM)
+    EndIf
+
+    CallTable(tsdata)
+    CallTable(stats)
+	NextScan
+EndProg
+
