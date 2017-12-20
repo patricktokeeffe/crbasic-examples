@@ -8,6 +8,20 @@ straightforward to adapt to sibling models.
 
 ### SDI-12
 
+Refer to the user manual for placing the device in SDI-12 mode. 
+
+#### Wiring
+
+| Pin # | Signal                 | CR6 terminal |
+|:-----:|------------------------|:------------:|
+|   9   | SDI-12 data signal     |      U1      |
+|   1   | SDI-12 signal ground   |    &#x23da;  |
+|   -   | cable shield           |    &#x23da;  |
+|   2   | 12V power input        |      12V     |
+|   3   | power ground           |      G       |
+
+#### Comparison
+
 **Advantages:**
 
 * Rapid integration (simple, standardized data protocol)
@@ -18,6 +32,8 @@ straightforward to adapt to sibling models.
 * Slow (too slow to query all parameters at 1Hz)
 * Limited data set (Wind Sensor Status code not available, only GPS position/altitude
     available)
+
+#### Messages
 
 | Parameter                   |  M! | M1! | M2! | M3! | M4! | M5! |
 |-----------------------------|-----|-----|-----|-----|-----|-----|
