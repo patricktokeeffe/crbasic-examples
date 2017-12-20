@@ -22,5 +22,5 @@ configuration:
 * Baud rate of 19200: <kbd>Cfg</kbd>&rarr;<kbd>I/O</kbd>&rarr;<kbd>Bdr</kbd>&rarr;<kbd>19200</kbd>
 * Temperature units of Celsius: <kbd>Cfg</kbd>&rarr;<kbd>Unt</kbd>&rarr;<kbd>T</kbd>&rarr;<kbd>C</kbd>
 * Pressure units of millibars: <kbd>Cfg</kbd>&rarr;<kbd>Unt</kbd>&rarr;<kbd>P</kbd>&rarr;<kbd>mbar</kbd>
-* *(recommended optional)* fast reporting rate: <kbd>Avg</kbd>&rarr;<kbd>10s</kbd>
+* *(recommended optional)* fast reporting rate: <kbd>Avg</kbd>&rarr;<kbd>2s</kbd>
 

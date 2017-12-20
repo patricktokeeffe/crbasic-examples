@@ -41,7 +41,7 @@ EndTable
 BeginProg
   SerialOpen(O3_COM,O3_BAUD,O3_FMT,0,O3_BUFF)
 
-	Scan (10,sec,0,0) 'same rate as analyzer data output
+	Scan (2,sec,0,0) 'same rate as analyzer data output
     SerialIn(o3_record,O3_COM,100,&h0D,O3_REC)
     If (Len(o3_record)) Then
       SplitStr(o3(1),o3_record,"",9,0)
