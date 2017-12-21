@@ -12,6 +12,7 @@ Const O3_REC = 80
 Const O3_BUFF = 1+2*O3_REC
 
 '========================== VARIABLES ========================
+Dim disable_m205 as Boolean
 Dim o3_record As String * O3_REC
 Dim o3(9)
 Alias o3(1) = m205_O3
@@ -44,10 +45,12 @@ BeginProg
 	Scan (2,sec,0,0) 'same rate as analyzer data output
     SerialIn(o3_record,O3_COM,100,&h0D,O3_REC)
     If (Len(o3_record)) Then
+      disable_m205 = False
       SplitStr(o3(1),o3_record,"",9,0)
       'HACK: naive sanity check on data parsing
       If (o3(9)=NAN OR m205_cell_P < 700 OR m205_cell_P > 1300) Then
         Move(o3(1),9,NAN,1)
+        disable_m205 = True
       EndIf
       SerialFlush(O3_COM)
     EndIf
