@@ -11,6 +11,8 @@ dataloggers.
     * [Model 205 dual beam ozone monitor](2btechnologies/model205/)
 * [Gill Instruments](gillinstruments/)
     * [MaxiMet GMX600 compact weather station](gillinstruments/maximet-gmx600/)
+* [TSI Inc](tsi/)
+    * [404x Series Flowmeters](tsi/flowmeter_404x/)
 
 
 ### Other Repositories
