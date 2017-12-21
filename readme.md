@@ -7,6 +7,8 @@ dataloggers.
 
 ### Examples
 
+* [2B Technologies](2btechnologies/)
+    * [Model 205 dual beam ozone monitor](2btechnologies/model205/)
 * [Gill Instruments](gillinstruments/)
     * [MaxiMet GMX600 compact weather station](gillinstruments/maximet-gmx600/)
 
