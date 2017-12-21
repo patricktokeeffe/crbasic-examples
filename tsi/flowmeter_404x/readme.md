@@ -1,6 +1,15 @@
 ## Model 4040/4043/4045 Thermal Mass Flowmeter
 
 For very fast (e.g. 10Hz) data acquisition, binary communication is suggested.
+Otherwise, plain-text (ASCII) communication is preferable. 
+
+### Plain-text (ASCII) serial comms
+
+The program [`tsi4043_ascii.cr6`](tsi4043_ascii.cr6) demonstrates plain-text
+data acquisition from a TSI model 4043 flowmeter. It also demonstrates real-time
+derivation of the Reynolds number (turbulence indicator) and an estimate of the
+sample travel (lag) time through the inlet line. 
+
 
 ### Binary serial comms
 
